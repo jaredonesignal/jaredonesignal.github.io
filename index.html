@@ -3,133 +3,119 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OneSignal Push Receiver — Root Site</title>
+  <title>OneSignal Web Push with Notify Button</title>
 
   <!-- OneSignal Web SDK v16 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
   <style>
-    :root { color-scheme: light dark; }
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; }
-    .card { width: min(720px, 92%); border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; }
-    h1 { margin: 0 0 8px; }
-    p.muted { color: #6b7280; margin-top: 0; }
-    button { padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer; font-weight: 600; }
-    button.primary { background: #3b82f6; color: white; }
-    code { background: #0f172a; color: #d1d5db; padding: 6px 10px; border-radius: 8px; }
-    pre { background: #0f172a; color: #d1d5db; padding: 12px; border-radius: 10px; overflow: auto; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #0b1020;
+      color: #e5e7eb;
+    }
+    .card {
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 560px;
+      width: 92%;
+      background: #111827;
+    }
+    button {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 600;
+      background: #3b82f6;
+      color: white;
+    }
+    code {
+      background: #0f172a;
+      padding: 6px 10px;
+      border-radius: 8px;
+      color: #93c5fd;
+    }
+    pre {
+      background: #0f172a;
+      color: #d1d5db;
+      padding: 12px;
+      border-radius: 10px;
+      overflow: auto;
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>OneSignal Web Push Receiver</h1>
-    <p class="muted">Click the button to enable notifications. Your Subscription (Player) ID will appear below.</p>
+    <h2>🔔 OneSignal Web Push Receiver (Notify Button Enabled)</h2>
+    <p>Click the Notify Button (bottom-right) to subscribe or manage your notifications.</p>
 
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 16px;">
-      <button id="enable" class="primary">Enable Notifications</button>
-      <button id="showPrompt">Show Slide-down Prompt</button>
+    <div style="margin-top:16px;">
+      Subscription ID: <code id="subId">—</code>
     </div>
 
-    <div style="margin-top: 8px;">
-      <div>Subscription ID:</div>
-      <code id="subId">—</code>
-    </div>
-
-    <h3 style="margin:16px 0 8px;">Logs</h3>
-    <pre id="log" aria-live="polite"></pre>
+    <pre id="log"></pre>
   </div>
 
   <script>
-    const APP_ID = "4bd637c1-11d5-46bf-b1c3-c203b648b25e"; 
+    const APP_ID = "4bd637c1-11d5-46bf-b1c3-c203b648b25e"; // your App ID
 
     const $ = (id) => document.getElementById(id);
     const log = (m) => { $("log").textContent += `${new Date().toLocaleTimeString()} — ${m}\n`; };
 
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
+    OneSignalDeferred.push(async function(OneSignal) {
       try {
         log("Initializing OneSignal…");
         await OneSignal.init({
           appId: APP_ID,
-          safari_web_id: SAFARI_WEB_ID,
           allowLocalhostAsSecureOrigin: true,
 
+          // 👇 Notify Button configuration (v16)
+          notifyButton: {
+            enable: true
+          },
+
+          // Optional: localize or customize pre-permission prompt
           promptOptions: {
             slidedown: {
-              prompts: [
-                {
-                    type: "push",         
-                    autoPrompt: true,      
-                    text: {
-                      actionMessage: "We’d like to send you updates and product news.",
-                      acceptButton: "Allow",
-                      cancelButton: "No thanks"
-                    },
-                    delay: {
-                      pageViews: 1,       
-                      timeDelay: 3         
-                    }
-                }
-              ]
+              prompts: [{
+                type: "push",
+                autoPrompt: true,
+                text: {
+                  actionMessage: "We’d like to send you updates and product news.",
+                  acceptButton: "Allow",
+                  cancelButton: "No thanks"
+                },
+                delay: { pageViews: 1, timeDelay: 3 }
+              }]
             }
           }
         });
+
         log("SDK initialized.");
 
-        // Keep UI in sync when subscription changes (ID assigned/removed)
+        // Subscription state listener
         OneSignal.User.PushSubscription.addEventListener("change", (evt) => {
           const id = evt?.current?.id || "";
           $("subId").textContent = id || "—";
           log("PushSubscription change:\n" + JSON.stringify(evt, null, 2));
         });
 
-        // Initial status snapshot
+        // Initial snapshot
         await refreshStatus(OneSignal);
-
-        // Manual: Show the slide-down prompt on demand
-        $("showPrompt").addEventListener("click", async () => {
-          try {
-            log("Showing slide-down prompt…");
-            await OneSignal.Slidedown.promptPush();
-          } catch (e) {
-            log("Slidedown error: " + (e.message || e));
-          }
-        });
-
-        // Manual: Native permission + opt-in
-        $("enable").addEventListener("click", async () => {
-          try {
-            const canReq = await OneSignal.Notifications.canRequestPermission();
-            log(`canRequestPermission: ${canReq}`);
-            if (!canReq) {
-              log("Permission blocked. In your browser’s Site settings, set Notifications → Allow for this site.");
-              return;
-            }
-            log("Requesting native permission…");
-            const granted = await OneSignal.Notifications.requestPermission(); // boolean
-            log(`Permission result: ${granted}`);
-            if (!granted) return;
-
-            log("Opting in (OneSignal) …");
-            await OneSignal.User.PushSubscription.optIn();
-            await refreshStatus(OneSignal);
-          } catch (e) {
-            log("Enable error: " + (e.message || e));
-          }
-        });
-
-        // Optional: see foreground display event
-        OneSignal.Notifications.addEventListener("foregroundWillDisplay", (event) => {
-          log("foregroundWillDisplay:\n" + JSON.stringify(event, null, 2));
-        });
-
       } catch (e) {
         log("Init error: " + (e.message || e));
       }
     });
 
     async function refreshStatus(OneSignal) {
-      const permission = OneSignal.Notifications.permission;   // boolean in v16
+      const permission = OneSignal.Notifications.permission;   // boolean
       const optedIn = OneSignal.User.PushSubscription.optedIn; // boolean
       let id = "";
       try { id = OneSignal.User.PushSubscription.id || ""; } catch {}
