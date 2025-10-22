@@ -43,16 +43,11 @@
       try {
         log("Initializing OneSignal…");
 
-        // Force worker under /JTestWeb/ (project-site scope)
+
         await OneSignal.init({
           appId: APP_ID,
           allowLocalhostAsSecureOrigin: true,
 
-          // v15-style keys (still honored)
-          serviceWorkerPath: `/${REPO}/OneSignalSDKWorker.js`,
-          serviceWorkerParam: { scope: `/${REPO}/` },
-
-          // v16-style object (extra safety)
           serviceWorker: {
             path: `/${REPO}/OneSignalSDKWorker.js`,
             params: { scope: `/${REPO}/` },
