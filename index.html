@@ -64,7 +64,6 @@
 
   <script>
     const APP_ID = "4bd637c1-11d5-46bf-b1c3-c203b648b25e"; // your App ID
-    const SAFARI_WEB_ID="Insert value"
 
     const $ = (id) => document.getElementById(id);
     const log = (m) => { $("log").textContent += `${new Date().toLocaleTimeString()} — ${m}\n`; };
@@ -75,7 +74,6 @@
         log("Initializing OneSignal…");
         await OneSignal.init({
           appId: APP_ID,
-          safari_web_id: SAFARI_WEB_ID,
           allowLocalhostAsSecureOrigin: true,
 
           // Notify Button configuration (v16)
