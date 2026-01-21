@@ -4,10 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OneSignal Web Push with Notify Button</title>
-
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W6L5475Z');</script>
+  <!-- End Google Tag Manager -->
+  
   <!-- OneSignal Web SDK v16 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-
   <style>
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -51,23 +58,23 @@
   </style>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W6L5475Z"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  
   <div class="card">
     <h2>OneSignal Web Push Receiver (Notify Button Enabled)</h2>
     <p>Click the Notify Button (bottom-right) to subscribe or manage your notifications.</p>
-
     <div style="margin-top:16px;">
       Subscription ID: <code id="subId">—</code>
     </div>
-
     <pre id="log"></pre>
   </div>
-
   <script>
     const APP_ID = "4bd637c1-11d5-46bf-b1c3-c203b648b25e"; // your App ID
-
     const $ = (id) => document.getElementById(id);
     const log = (m) => { $("log").textContent += `${new Date().toLocaleTimeString()} — ${m}\n`; };
-
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       try {
@@ -75,12 +82,10 @@
         await OneSignal.init({
           appId: APP_ID,
           allowLocalhostAsSecureOrigin: true,
-
           // Notify Button configuration (v16)
           notifyButton: {
             enable: true
           },
-
           // Optional: localize or customize pre-permission prompt
           promptOptions: {
             slidedown: {
@@ -88,7 +93,7 @@
                 type: "push",
                 autoPrompt: true,
                 text: {
-                  actionMessage: "We’d like to send you updates and product news.",
+                  actionMessage: "We'd like to send you updates and product news.",
                   acceptButton: "Allow",
                   cancelButton: "No thanks"
                 },
@@ -97,23 +102,19 @@
             }
           }
         });
-
         log("SDK initialized.");
-
         // Subscription state listener
         OneSignal.User.PushSubscription.addEventListener("change", (evt) => {
           const id = evt?.current?.id || "";
           $("subId").textContent = id || "—";
           log("PushSubscription change:\n" + JSON.stringify(evt, null, 2));
         });
-
         // Initial snapshot
         await refreshStatus(OneSignal);
       } catch (e) {
         log("Init error: " + (e.message || e));
       }
     });
-
     async function refreshStatus(OneSignal) {
       const permission = OneSignal.Notifications.permission;   // boolean
       const optedIn = OneSignal.User.PushSubscription.optedIn; // boolean
